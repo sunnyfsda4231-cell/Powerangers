@@ -71,9 +71,19 @@ function getDiceHTML(num, isRolling, isSmall) {
     `;
 }
 
+window.handleImageError = function(imgElement, color, sizeClass, name) {
+    window.missingImages = window.missingImages || new Set();
+    window.missingImages.add(name);
+    imgElement.outerHTML = `<div class="color-indicator c-${color} ${sizeClass}"></div>`;
+};
+
 function getCharAvatarHTML(m, sizeClass = '') {
     const size = sizeClass === 'small' ? 'small' : '';
-    return `<img src="${m.imgUrl || 'img/' + m.name + '.png'}" onerror="this.onerror=null; this.outerHTML='<div class=\\'color-indicator c-${m.color} ${size}\\'></div>'" class="char-img ${size}">`;
+    window.missingImages = window.missingImages || new Set();
+    if (window.missingImages.has(m.name)) {
+        return `<div class="color-indicator c-${m.color} ${size}"></div>`;
+    }
+    return `<img src="${m.imgUrl || 'img/' + m.name + '.png'}" onerror="window.handleImageError(this, '${m.color}', '${size}', '${m.name}')" class="char-img ${size}">`;
 }
 
 function rollDice(sides = 6) { return Math.floor(Math.random() * sides) + 1; }
