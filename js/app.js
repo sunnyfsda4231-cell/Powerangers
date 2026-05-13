@@ -503,6 +503,30 @@ function auctionTick() {
 
 
 
+window.skipCurrentAuction = function() {
+    clearInterval(state.auctionInterval);
+    const member = state.auctionPool[state.currentAuctionIndex];
+    const statSum = member.stats.reduce((a,b)=>a+b, 0);
+    const price = statSum * 5;
+
+    let availableNPCs = state.npcRivals.filter(npc => 
+        !npc.team.some(m => m.color === member.color) && npc.team.length < 5
+    );
+    
+    if (availableNPCs.length > 0) {
+        let npc = availableNPCs[Math.floor(Math.random() * availableNPCs.length)];
+        npc.gold -= price;
+        npc.team.push(member);
+        log(`[패스] ${npc.name}이(가) ${price}G에 ${member.name}을(를) 영입했습니다.`);
+    } else {
+        log(`[패스] 조건에 맞는 전대가 없어 유찰되었습니다.`);
+    }
+
+    state.currentAuctionIndex++;
+    setTimeout(window.nextAuctionItem, 2000);
+    render();
+}
+
 window.playerBid = function() {
     if (state.team.length >= 5) {
         alert("이미 5명의 팀원을 모두 구성했습니다!");
@@ -669,6 +693,10 @@ function renderPhase1() {
             <button class="btn btn-primary" style="font-size: 1.5rem; padding: 1rem 3rem;" 
                 onclick="playerBid()" ${state.team.length >= 5 || state.gold < state.currentBid + 5 || hasSameColor ? 'disabled' : ''}>
                 ${state.team.length >= 5 ? '편성 완료' : (hasSameColor ? '중복 색상 불가' : '+5G 입찰!')}
+            </button>
+            <button class="btn" style="font-size: 1.5rem; padding: 1rem 2rem; border-color:var(--neon-red); color:var(--neon-red)" 
+                onclick="skipCurrentAuction()">
+                패스
             </button>
         </div>
     </div>
